@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# data set
+jane-street-market-prediction
+
+# zip files
+**.zip
