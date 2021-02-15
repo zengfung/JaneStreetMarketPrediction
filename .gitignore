@@ -129,7 +129,8 @@ dmypy.json
 .pyre/
 
 # data set
-jane-street-market-prediction
+jane-street-market-prediction/
+dataset/
 
 # zip files
 **.zip
