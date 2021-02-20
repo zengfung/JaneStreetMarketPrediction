@@ -10,13 +10,12 @@ The following are some possible steps to achieve such goals:
 
 1. Denoising
 
-    * Rolling Averages
-    * Thresholding using Wavelet Transforms
+    * Soft Thresholding using Wavelet Packet Transforms
 
 2. Machine Learning models used:
 
    * Decision Trees (CART)
-   * Linear Regression
+   * Linear Discriminant Analysis
    * k-Nearest Neighbors
    * Artificial Neural Network
    * Convolutional Neural Network

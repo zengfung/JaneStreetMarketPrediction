@@ -16,7 +16,10 @@ y = np.ravel(y)
 ##
 from sklearn.model_selection import train_test_split
 
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.5, random_state = 1)
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.995, random_state = 1)
+print("Number of training data:", x_train.shape[0])
+print("Trues proportion in training data:", sum(y_train)/len(y_train))
+print("Trues propotion in test data:", sum(y_test)/len(y_test))
 
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score

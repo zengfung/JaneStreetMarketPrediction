@@ -4,7 +4,8 @@ import pandas as pd
 x = pd.read_csv("../dataset/input_data.csv").to_numpy()
 resp = pd.read_csv("../dataset/output_data.csv")
 
-##
+#%%
+# run PCA on resp values + set action = 1 if PCA'd resp value > 0
 from sklearn.decomposition import PCA
 import numpy as np
 
@@ -17,11 +18,18 @@ del resp
 del pca
 del resp_pca
 
+#%%
+# split data into train, valid, test sets
 from sklearn.model_selection import train_test_split
 
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state = 1)
 x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size = 0.2, random_state = 2)
 
+#%%
+# denoise signals (refer to utils.py for more info)
+from utils import denoise_test_signals, denoise_signals
+x_train[:,1:], x_valid[:,1:], t = denoise_signals(x_train[:,1:], x_valid[:,1:], wt = "haar")
+x_test[:,1:] = denoise_test_signals(x_test[:,1:], wt = "db1", t = t)
 
 print("Train size:", y_train.shape[0], "; % trues:", np.sum(y_train)/y_train.shape[0])
 print("Valid size:", y_valid.shape[0], "; % trues:", np.sum(y_valid)/y_valid.shape[0])
@@ -81,4 +89,4 @@ print("Test accuracy score:", acc)
 
 ##
 model.summary()
-model.save("../models/simple_ann.h5")
+model.save("../models/simple_ann_withdenoising.h5")
