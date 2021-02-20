@@ -21,6 +21,11 @@ print("Number of training data:", x_train.shape[0])
 print("Trues proportion in training data:", sum(y_train)/len(y_train))
 print("Trues propotion in test data:", sum(y_test)/len(y_test))
 
+##
+from utils import denoise_signals
+
+x_train[:,1:], x_test[:,1:], t = denoise_signals(x_train[:,1:], x_test[:,1:], wt = "coif4")
+
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 

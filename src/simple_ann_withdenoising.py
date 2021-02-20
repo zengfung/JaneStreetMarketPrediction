@@ -1,8 +1,8 @@
 # simple ANN model
 import pandas as pd
 
-x = pd.read_csv("../dataset/input_data.csv").to_numpy()
-resp = pd.read_csv("../dataset/output_data.csv")
+x = pd.read_csv("../dataset/input_data.csv", nrows=2000).to_numpy()
+resp = pd.read_csv("../dataset/output_data.csv", nrows= 2000)
 
 #%%
 # run PCA on resp values + set action = 1 if PCA'd resp value > 0
@@ -60,7 +60,7 @@ def simple_ann(x_train, y_train, x_valid, y_valid):
     
     opt = Adam(learning_rate = 0.01)
     model.compile(loss = "binary_crossentropy", optimizer = opt, metrics = ["accuracy"])
-    model.fit(x_train, y_train, epochs = 500, batch_size = 1024,
+    model.fit(x_train, y_train, epochs = 100, batch_size = 1024,
               validation_data = (x_valid, y_valid),
               verbose = 2)
     

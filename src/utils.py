@@ -146,3 +146,14 @@ def denoise_signals(x_train, x_test, wt = "haar"):
     x_test_denoised = denoise_test_signals(x_test, wt, t)
 
     return x_train_denoised, x_test_denoised, t
+
+# turn the weights into an extra channel
+def weights2channels(x, weights):
+    (N, n) = x.shape
+    
+    x_new = np.zeros((N,n,2))
+    for i in range(N):
+        x_new[i,:,0] = x[i,:]
+        x_new[i,:,1] = weights[i]
+    
+    return x_new
