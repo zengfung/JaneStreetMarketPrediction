@@ -2,10 +2,14 @@
 
 import pandas as pd
 
-df = pd.read_csv("./jane-street-market-prediction/train.csv")
+df = pd.read_csv("../jane-street-market-prediction/train.csv")
 
 # drop rows with NaN values
 df.dropna(axis = 0, inplace = True)
+
+# filter rows with non-zero weights
+nonzero_weight = df["weight"] > 0
+df = df[nonzero_weight]
 
 # create data frame for inputs (X)
 ts = df.iloc[:, 7:137]

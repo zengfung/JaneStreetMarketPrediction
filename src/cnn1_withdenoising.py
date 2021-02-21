@@ -1,8 +1,8 @@
 # simple CNN model
 import pandas as pd
 
-x = pd.read_csv("../dataset/input_data.csv").to_numpy()
-resp = pd.read_csv("../dataset/output_data.csv").to_numpy()
+x = pd.read_csv("../dataset/input_data.csv", nrows=5000).to_numpy()
+resp = pd.read_csv("../dataset/output_data.csv", nrows=5000).to_numpy()
 
 #%%
 # run PCA on resp values + set action = 1 if PCA'd resp value > 0
@@ -32,7 +32,7 @@ print("Test size:", y_test.shape[0], "; % trues:", np.sum(y_test)/y_test.shape[0
 #%%
 # denoise signals (refer to utils.py for more info)
 from utils import denoise_test_signals, denoise_signals
-x_train[:,1:], x_valid[:,1:], t = denoise_signals(x_train[:,1:], x_valid[:,1:], wt = "haar")
+x_train[:,1:], x_valid[:,1:], t = denoise_signals(x_train[:,1:], x_valid[:,1:], wt = "sym2")
 x_test[:,1:] = denoise_test_signals(x_test[:,1:], wt = "db1", t = t)
 
 #%%
@@ -103,31 +103,26 @@ def simple_ann(x_train, y_train, x_valid, y_valid):
               kernel_regularizer = tf.keras.regularizers.l2(1e-4)),
         BatchNormalization(),
         Activation(tf.keras.activations.relu),
-        Dropout(0.2),
         # 2nd dense layer
         Dense(units = 64, kernel_initializer = GlorotNormal(),
               kernel_regularizer = tf.keras.regularizers.l2(1e-4)),
         BatchNormalization(),
         Activation(tf.keras.activations.relu),
-        Dropout(0.2),
         # 3rd dense layer
         Dense(units = 32, kernel_initializer = GlorotNormal(),
               kernel_regularizer = tf.keras.regularizers.l2(1e-4)),
         BatchNormalization(),
         Activation(tf.keras.activations.relu),
-        Dropout(0.2),
         # 4th dense layer
         Dense(units = 32, kernel_initializer = GlorotNormal(),
               kernel_regularizer = tf.keras.regularizers.l2(1e-4)),
         BatchNormalization(),
         Activation(tf.keras.activations.relu),
-        Dropout(0.2),
         # 5th dense layer
         Dense(units = 16, kernel_initializer = GlorotNormal(),
               kernel_regularizer = tf.keras.regularizers.l2(1e-4)),
         BatchNormalization(),
         Activation(tf.keras.activations.relu),
-        Dropout(0.2),
         # 6th dense layer
         Dense(units = 16, kernel_initializer = GlorotNormal(),
               kernel_regularizer = tf.keras.regularizers.l2(1e-4)),
@@ -137,9 +132,9 @@ def simple_ann(x_train, y_train, x_valid, y_valid):
         Dense(units = 1, activation = "sigmoid")
         ])
     
-    opt = Adam(learning_rate = 0.001)
+    opt = Adam(learning_rate = 0.01)
     model.compile(loss = "binary_crossentropy", optimizer = opt, 
-                  metrics = ["accuracy"])
+                  metrics = [tf.keras.metrics.AUC(name="AUC"), "accuracy"])
     model.fit(x_train, y_train, epochs = 50, batch_size = 1024,
               validation_data = (x_valid, y_valid),
               verbose = 2)
@@ -168,5 +163,5 @@ acc = accuracy_score(y_test, yhat_test)
 print("Test accuracy score:", acc)
 
 ##
-model.summary()
+# model.summary()
 model.save("../models/cnn1_withdenoising.h5")
