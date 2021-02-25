@@ -1,8 +1,8 @@
-# VGG16-inspired convolutional-regular neural network
+# AlexNet-inspired convolutional-regular neural network
 import pandas as pd
 
-x = pd.read_csv("../dataset/input_data.csv", nrows = 50000).to_numpy()
-resp = pd.read_csv("../dataset/output_data.csv", nrows = 50000)
+x = pd.read_csv("../dataset/input_data.csv", nrows = 10000).to_numpy()
+resp = pd.read_csv("../dataset/output_data.csv", nrows = 10000)
 
 #%%
 # run PCA on resp values + set action = 1 if PCA'd resp value > 0
@@ -45,85 +45,40 @@ from tensorflow.keras.layers import Activation
 from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.layers import Dropout
 from tensorflow.keras.initializers import GlorotNormal
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.callbacks import EarlyStopping
 
 def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     # convolutional layers for time-series
     ts = Sequential([
         Input(shape = (130,1)),
-        # 1st set of convolution layer (16 -> 16 -> Maxpool -> Dropout)
-        Conv1D(filters = 16, kernel_size = 2, strides = 1, padding = "valid",
+        # 1st set of convolution layer (96 -> MaxPool -> Dropout)
+        Conv1D(filters = 96, kernel_size = 6, strides = 4, padding = "valid",
                kernel_initializer = GlorotNormal()),
-        BatchNormalization(),
         Activation(tf.keras.activations.relu),
-        Conv1D(filters = 16, kernel_size = 2, strides = 1, padding = "valid",
-                kernel_initializer = GlorotNormal()),
-        BatchNormalization(),
-        Activation(tf.keras.activations.relu),
-        MaxPooling1D(pool_size = 2, strides = 1, padding = "valid"),
+        MaxPooling1D(pool_size = 2, strides = 2, padding = "valid"),
         SpatialDropout1D(0.2),
         
-        # 2nd set of convolutional layer (64 -> 64 -> Maxpool -> Dropout)
-        Conv1D(filters = 64, kernel_size = 3, strides = 1, padding = "same",
+        # 2nd set of convolutional layer (256 -> MaxPool)
+        Conv1D(filters = 256, kernel_size = 5, strides = 1, padding = "same",
                kernel_initializer = GlorotNormal()),
-        BatchNormalization(),
         Activation(tf.keras.activations.relu),
-        Conv1D(filters = 64, kernel_size = 3, strides = 1, padding = "same",
-                kernel_initializer = GlorotNormal()),
-        BatchNormalization(),
-        Activation(tf.keras.activations.relu),
-        MaxPooling1D(pool_size = 2, strides = 1, padding = "valid"),
-        SpatialDropout1D(0.2),
-        
-        # 3rd set of convolutional layer (128 -> 128 -> 128 -> Maxpool -> Dropout)
-        Conv1D(filters = 128, kernel_size = 3, strides = 1, padding = "same",
-               kernel_initializer = GlorotNormal()),
-        BatchNormalization(),
-        Activation(tf.keras.activations.relu),
-        Conv1D(filters = 128, kernel_size = 3, strides = 1, padding = "same",
-                kernel_initializer = GlorotNormal()),
-        BatchNormalization(),
-        Activation(tf.keras.activations.relu),
-        Conv1D(filters = 128, kernel_size = 3, strides = 1, padding = "same",
-                kernel_initializer = GlorotNormal()),
-        BatchNormalization(),
-        Activation(tf.keras.activations.relu),
-        MaxPooling1D(pool_size = 2, strides = 1, padding = "valid"),
-        SpatialDropout1D(0.2),
-        
-        # 4th set of convolutional layer (256 -> 256 -> 256 -> Maxpool -> Dropout)
-        Conv1D(filters = 256, kernel_size = 3, strides = 1, padding = "same",
-               kernel_initializer = GlorotNormal()),
-        BatchNormalization(),
-        Activation(tf.keras.activations.relu),
-        Conv1D(filters = 256, kernel_size = 3, strides = 1, padding = "same",
-                kernel_initializer = GlorotNormal()),
-        BatchNormalization(),
-        Activation(tf.keras.activations.relu),
-        Conv1D(filters = 256, kernel_size = 3, strides = 1, padding = "same",
-                kernel_initializer = GlorotNormal()),
-        BatchNormalization(),
-        Activation(tf.keras.activations.relu),
-        MaxPooling1D(pool_size = 2, strides = 1, padding = "valid"),
-        SpatialDropout1D(0.2),
-        
-        # 5th set of convolutional layer (512 -> 512 -> 512 -> Maxpool -> Dropout)
-        Conv1D(filters = 512, kernel_size = 3, strides = 1, padding = "same",
-               kernel_initializer = GlorotNormal()),
-        BatchNormalization(),
-        Activation(tf.keras.activations.relu),
-        Conv1D(filters = 512, kernel_size = 3, strides = 1, padding = "same",
-                kernel_initializer = GlorotNormal()),
-        BatchNormalization(),
-        Activation(tf.keras.activations.relu),
-        Conv1D(filters = 512, kernel_size = 3, strides = 1, padding = "same",
-                kernel_initializer = GlorotNormal()),
-        BatchNormalization(),
-        Activation(tf.keras.activations.relu),
-        MaxPooling1D(pool_size = 2, strides = 1, padding = "valid"),
+        MaxPooling1D(pool_size = 2, strides = 2, padding = "valid"),
         SpatialDropout1D(0.2),
 
+        # 3rd set of convolutional layer (384 -> 384 -> 256 -> MaxPool)
+        Conv1D(filters = 384, kernel_size = 3, strides = 1, padding = "same",
+               kernel_initializer = GlorotNormal()),
+        Activation(tf.keras.activations.relu),
+        Conv1D(filters = 384, kernel_size = 3, strides = 1, padding = "same",
+               kernel_initializer = GlorotNormal()),
+        Activation(tf.keras.activations.relu),
+        SpatialDropout1D(0.2),
+        Conv1D(filters = 256, kernel_size = 3, strides = 1, padding = "same",
+               kernel_initializer = GlorotNormal()),
+        Activation(tf.keras.activations.relu),
+        MaxPooling1D(pool_size = 3, strides = 2, padding = "valid"),
+        
         # Flatten layer
         Flatten()
         ])
@@ -136,17 +91,14 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     
     # concatenate ts and w
     model_concat = Concatenate(axis = -1)([ts.output, w.output])
-    # 1st set of layers (128 -> 64 -> 32)
-    model_concat = Dense(units = 128, kernel_initializer = GlorotNormal())(model_concat)
+    # 1st set of layers (256 -> Dropout -> 256 -> Dropout )
+    model_concat = Dense(units = 256, kernel_initializer = GlorotNormal())(model_concat)
+    model_concat = BatchNormalization()(model_concat)
+    model_concat = Activation(tf.keras.activations.relu)(model_concat)
+    model_concat = Dense(units = 256, kernel_initializer = GlorotNormal())(model_concat)
     model_concat = BatchNormalization()(model_concat)
     model_concat = Activation(tf.keras.activations.relu)(model_concat)
     model_concat = Dropout(0.2)(model_concat)
-    model_concat = Dense(units = 64, kernel_initializer = GlorotNormal())(model_concat)
-    model_concat = BatchNormalization()(model_concat)
-    model_concat = Activation(tf.keras.activations.relu)(model_concat)
-    model_concat = Dense(units = 32, kernel_initializer = GlorotNormal())(model_concat)
-    model_concat = BatchNormalization()(model_concat)
-    model_concat = Activation(tf.keras.activations.relu)(model_concat)
     # output layer
     model_concat = Dense(units = 1, activation = "sigmoid")(model_concat)
     
@@ -154,19 +106,17 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     model = Model(inputs = [ts.input, w.input], outputs = model_concat)
     
     # fit model
-    learning_rate = 0.01
-    decay_rate = learning_rate / epochs
-    opt = Adam(learning_rate = learning_rate, decay = decay_rate)
+    opt = SGD(learning_rate = 0.01, momentum = 0.9, decay = 0.0005)
     model.compile(loss = "binary_crossentropy", optimizer = opt, 
                   metrics = [tf.keras.metrics.AUC(name="AUC"), "accuracy"])
     history = model.fit(x_train, y_train, epochs = epochs, batch_size = batch_size,
               validation_split = 0.2,
-              callbacks = [EarlyStopping('accuracy', patience = 10, restore_best_weights = True)],
+              callbacks = [EarlyStopping('accuracy', patience=10, restore_best_weights = True)],
               verbose = 2)
     
     return model, history
 
-model, history = fit_model([ts_train, w_train], y_train, 100, 64)
+model, history = fit_model([ts_train, w_train], y_train, 100, 1024)
 
 #%%
 from sklearn.metrics import accuracy_score
@@ -183,7 +133,7 @@ print("Test accuracy score:", acc)
 
 ##
 model.summary()
-model.save("../models/dlmodel5.h5")
+model.save("../models/dlmodel7.h5")
 
 #%%
 # plot training vs validation accuracy
@@ -206,5 +156,5 @@ ax2.set_ylabel("Loss", fontsize = 8)
 ax2.set_title("Loss", fontsize = 10)
 ax2.legend(fontsize = 8)
 
-fig.savefig("../results/dlmodel5.png")
+fig.savefig("../results/dlmodel7.png")
 fig.show()

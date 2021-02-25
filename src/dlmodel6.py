@@ -52,12 +52,13 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     # convolutional layers for time-series
     ts = Sequential([
         Input(shape = (130,1)),
-        # 1st set of convolution layer (8 -> AvgPool)
+        # 1st set of convolution layer (8 -> AvgPool -> Dropout)
         Conv1D(filters = 8, kernel_size = 3, strides = 1, padding = "valid",
                kernel_initializer = GlorotNormal()),
         BatchNormalization(),
         Activation(tf.keras.activations.relu),
         AveragePooling1D(pool_size = 2, strides = 2, padding = "valid"),
+        SpatialDropout1D(0.3),
         
         # 2nd set of convolutional layer (16 -> AvgPool)
         Conv1D(filters = 16, kernel_size = 5, strides = 1, padding = "valid",
@@ -78,14 +79,15 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     
     # concatenate ts and w
     model_concat = Concatenate(axis = -1)([ts.output, w.output])
-    # 1st set of layers (128 -> Dropout -> 64)
+    # 1st set of layers (128 -> Dropout -> 64 -> Dropout )
     model_concat = Dense(units = 128, kernel_initializer = GlorotNormal())(model_concat)
     model_concat = BatchNormalization()(model_concat)
     model_concat = Activation(tf.keras.activations.relu)(model_concat)
-    model_concat = Dropout(0.2)(model_concat)
+    model_concat = Dropout(0.3)(model_concat)
     model_concat = Dense(units = 64, kernel_initializer = GlorotNormal())(model_concat)
     model_concat = BatchNormalization()(model_concat)
     model_concat = Activation(tf.keras.activations.relu)(model_concat)
+    model_concat = Dropout(0.3)(model_concat)
     # output layer
     model_concat = Dense(units = 1, activation = "sigmoid")(model_concat)
     
@@ -93,14 +95,14 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     model = Model(inputs = [ts.input, w.input], outputs = model_concat)
     
     # fit model
-    learning_rate = 0.01
+    learning_rate = 0.05
     decay_rate = learning_rate / epochs
     opt = Adam(learning_rate = learning_rate, decay = decay_rate)
     model.compile(loss = "binary_crossentropy", optimizer = opt, 
                   metrics = [tf.keras.metrics.AUC(name="AUC"), "accuracy"])
     history = model.fit(x_train, y_train, epochs = epochs, batch_size = batch_size,
               validation_split = 0.2,
-              # callbacks = [EarlyStopping('val_accuracy', patience=10, restore_best_weights = True)],
+              callbacks = [EarlyStopping('val_accuracy', patience=10, restore_best_weights = True)],
               verbose = 2)
     
     return model, history
