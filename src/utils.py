@@ -101,7 +101,7 @@ def threshold_vs_relerror_plot(x, y, ix, A, v):
     ax.plot([x[ix[2]], dropto[0]], [y[ix[2]], dropto[1]], color = "red", linestyle = "-", linewidth = 2)    # perpendicular line
     ax.scatter(x[ix[2]], y[ix[2]], color = "red", linewidth = 2)                                            # higlight point
 
-    # third elbow point
+    # fourth elbow point
     ax.plot([x[0], x[ix[2]]], [y[0], y[ix[2]]], color = "cyan", linestyle = "-", linewidth = 2)              # diagonal line
     dropto = np.array([x[0], y[0]]) + A[3][ix[3]] * (v[3] * np.array([xmax, ymax])) 
     ax.plot([x[ix[3]], dropto[0]], [y[ix[3]], dropto[1]], color = "cyan", linestyle = "-", linewidth = 2)    # perpendicular line
