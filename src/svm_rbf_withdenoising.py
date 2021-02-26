@@ -20,11 +20,16 @@ x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.95, rand
 print("Train size:", y_train.shape[0], "; % trues:", np.sum(y_train)/y_train.shape[0])
 print("Test size:", y_test.shape[0], "; % trues:", np.sum(y_test)/y_test.shape[0])
 
+##
+from utils import denoise_signals
+
+x_train[:,1:], x_test[:,1:], t = denoise_signals(x_train[:,1:], x_test[:,1:], wt = "sym2")
+
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 
 # fit model
-clf = SVC(kernel = "linear")
+clf = SVC(kernel = "rbf")
 clf.fit(x_train, y_train)
 
 # predictions on training set

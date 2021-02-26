@@ -1,4 +1,4 @@
-# linear SVM model
+# RBF SVM model
 import pandas as pd
 
 x = pd.read_csv("../dataset/input_data.csv").to_numpy()
@@ -24,7 +24,7 @@ from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 
 # fit model
-clf = SVC(kernel = "linear")
+clf = SVC(kernel = "rbf")
 clf.fit(x_train, y_train)
 
 # predictions on training set

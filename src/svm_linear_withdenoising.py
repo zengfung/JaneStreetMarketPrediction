@@ -1,8 +1,8 @@
 # linear SVM model
 import pandas as pd
 
-x = pd.read_csv("../dataset/input_data.csv", nrows = 2000).to_numpy()
-resp = pd.read_csv("../dataset/output_data.csv", nrows = 2000).to_numpy()
+x = pd.read_csv("../dataset/input_data.csv").to_numpy()
+resp = pd.read_csv("../dataset/output_data.csv").to_numpy()
 
 ##
 from sklearn.decomposition import PCA
@@ -16,15 +16,14 @@ y = np.ravel(y)
 ##
 from sklearn.model_selection import train_test_split
 
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state = 1)
-print("Number of training data:", x_train.shape[0])
-print("Trues proportion in training data:", sum(y_train)/len(y_train))
-print("Trues propotion in test data:", sum(y_test)/len(y_test))
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.95, random_state = 1)
+print("Train size:", y_train.shape[0], "; % trues:", np.sum(y_train)/y_train.shape[0])
+print("Test size:", y_test.shape[0], "; % trues:", np.sum(y_test)/y_test.shape[0])
 
 ##
 from utils import denoise_signals
 
-x_train[:,1:], x_test[:,1:], t = denoise_signals(x_train[:,1:], x_test[:,1:], wt = "coif4")
+x_train[:,1:], x_test[:,1:], t = denoise_signals(x_train[:,1:], x_test[:,1:], wt = "sym2")
 
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
