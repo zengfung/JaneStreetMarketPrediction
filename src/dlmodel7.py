@@ -106,7 +106,7 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     model = Model(inputs = [ts.input, w.input], outputs = model_concat)
     
     # fit model
-    opt = SGD(learning_rate = 0.01, momentum = 0.9, decay = 0.0005)
+    opt = SGD(learning_rate = 0.05, momentum = 0.9, decay = 0.0005)
     model.compile(loss = "binary_crossentropy", optimizer = opt, 
                   metrics = [tf.keras.metrics.AUC(name="AUC"), "accuracy"])
     history = model.fit(x_train, y_train, epochs = epochs, batch_size = batch_size,

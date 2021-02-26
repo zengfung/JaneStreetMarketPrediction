@@ -1,8 +1,8 @@
 # LeNet5-inspired convolutional-regular neural network
 import pandas as pd
 
-x = pd.read_csv("../dataset/input_data.csv").to_numpy()
-resp = pd.read_csv("../dataset/output_data.csv")
+x = pd.read_csv("../dataset/input_data.csv", nrows = 10000).to_numpy()
+resp = pd.read_csv("../dataset/output_data.csv", nrows = 10000)
 
 #%%
 # run PCA on resp values + set action = 1 if PCA'd resp value > 0
@@ -45,7 +45,7 @@ from tensorflow.keras.layers import Activation
 from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.layers import Dropout
 from tensorflow.keras.initializers import GlorotNormal
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.callbacks import EarlyStopping
 
 def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
@@ -55,16 +55,14 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
         # 1st set of convolution layer (8 -> AvgPool -> Dropout)
         Conv1D(filters = 8, kernel_size = 3, strides = 1, padding = "valid",
                kernel_initializer = GlorotNormal()),
-        BatchNormalization(),
-        Activation(tf.keras.activations.relu),
+        Activation(tf.keras.activations.tanh),
         AveragePooling1D(pool_size = 2, strides = 2, padding = "valid"),
-        SpatialDropout1D(0.3),
+        SpatialDropout1D(0.5),
         
         # 2nd set of convolutional layer (16 -> AvgPool)
         Conv1D(filters = 16, kernel_size = 5, strides = 1, padding = "valid",
                kernel_initializer = GlorotNormal()),
-        BatchNormalization(),
-        Activation(tf.keras.activations.relu),
+        Activation(tf.keras.activations.tanh),
         AveragePooling1D(pool_size = 2, strides = 2, padding = "valid"),
         
         # Flatten layer
@@ -82,12 +80,12 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     # 1st set of layers (128 -> Dropout -> 64 -> Dropout )
     model_concat = Dense(units = 128, kernel_initializer = GlorotNormal())(model_concat)
     model_concat = BatchNormalization()(model_concat)
-    model_concat = Activation(tf.keras.activations.relu)(model_concat)
-    model_concat = Dropout(0.3)(model_concat)
+    model_concat = Activation(tf.keras.activations.tanh)(model_concat)
+    model_concat = Dropout(0.5)(model_concat)
     model_concat = Dense(units = 64, kernel_initializer = GlorotNormal())(model_concat)
     model_concat = BatchNormalization()(model_concat)
-    model_concat = Activation(tf.keras.activations.relu)(model_concat)
-    model_concat = Dropout(0.3)(model_concat)
+    model_concat = Activation(tf.keras.activations.tanh)(model_concat)
+    model_concat = Dropout(0.5)(model_concat)
     # output layer
     model_concat = Dense(units = 1, activation = "sigmoid")(model_concat)
     
@@ -95,19 +93,17 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     model = Model(inputs = [ts.input, w.input], outputs = model_concat)
     
     # fit model
-    learning_rate = 0.05
-    decay_rate = learning_rate / epochs
-    opt = Adam(learning_rate = learning_rate, decay = decay_rate)
+    opt = SGD(learning_rate = 0.1, momentum = 0.9, decay = 0.0005)
     model.compile(loss = "binary_crossentropy", optimizer = opt, 
                   metrics = [tf.keras.metrics.AUC(name="AUC"), "accuracy"])
     history = model.fit(x_train, y_train, epochs = epochs, batch_size = batch_size,
               validation_split = 0.2,
-              callbacks = [EarlyStopping('val_accuracy', patience=10, restore_best_weights = True)],
+              # callbacks = [EarlyStopping('val_accuracy', patience=10, restore_best_weights = True)],
               verbose = 2)
     
     return model, history
 
-model, history = fit_model([ts_train, w_train], y_train, 100, 1024)
+model, history = fit_model([ts_train, w_train], y_train, 500, 1024)
 
 #%%
 from sklearn.metrics import accuracy_score
