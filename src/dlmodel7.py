@@ -1,8 +1,8 @@
 # AlexNet-inspired convolutional-regular neural network
 import pandas as pd
 
-x = pd.read_csv("../dataset/input_data.csv", nrows = 10000).to_numpy()
-resp = pd.read_csv("../dataset/output_data.csv", nrows = 10000)
+x = pd.read_csv("../dataset/input_data.csv").to_numpy()
+resp = pd.read_csv("../dataset/output_data.csv")
 
 #%%
 # run PCA on resp values + set action = 1 if PCA'd resp value > 0
@@ -107,16 +107,28 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     
     # fit model
     opt = SGD(learning_rate = 0.05, momentum = 0.9, decay = 0.0005)
-    model.compile(loss = "binary_crossentropy", optimizer = opt, 
-                  metrics = [tf.keras.metrics.AUC(name="AUC"), "accuracy"])
-    history = model.fit(x_train, y_train, epochs = epochs, batch_size = batch_size,
-              validation_split = 0.2,
-              callbacks = [EarlyStopping('accuracy', patience=10, restore_best_weights = True)],
-              verbose = 2)
+    model.compile(
+        loss = "binary_crossentropy", 
+        optimizer = opt,
+        metrics = [tf.keras.metrics.AUC(name="AUC"), "accuracy"]
+        )
+    history = model.fit(
+        x = x_train, 
+        y = y_train, 
+        epochs = epochs, 
+        batch_size = batch_size,
+        validation_split = 0.2,
+        callbacks = [EarlyStopping('accuracy', patience=10, restore_best_weights = True)],
+        verbose = 2
+        )
     
     return model, history
 
-model, history = fit_model([ts_train, w_train], y_train, 100, 1024)
+model, history = fit_model([ts_train, w_train], y_train, 500, 1024)
+
+##
+model.summary()
+model.save("../models/dlmodel7.h5")
 
 #%%
 from sklearn.metrics import accuracy_score
@@ -130,10 +142,6 @@ yhat_test = model.predict([ts_test, w_test])
 yhat_test = (yhat_test > 0.5).astype("int")
 acc = accuracy_score(y_test, yhat_test)
 print("Test accuracy score:", acc)
-
-##
-model.summary()
-model.save("../models/dlmodel7.h5")
 
 #%%
 # plot training vs validation accuracy

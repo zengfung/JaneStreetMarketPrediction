@@ -127,16 +127,28 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     learning_rate = 0.05
     decay_rate = learning_rate / epochs
     opt = Adam(learning_rate = learning_rate, decay = decay_rate)
-    model.compile(loss = "binary_crossentropy", optimizer = opt, 
-                  metrics = [tf.keras.metrics.AUC(name="AUC"), "accuracy"])
-    history = model.fit(x_train, y_train, epochs = epochs, batch_size = batch_size,
-              validation_split = 0.2,
-              callbacks = [EarlyStopping('val_accuracy', patience=10, restore_best_weights = True)],
-              verbose = 2)
+    model.compile(
+        loss = "binary_crossentropy", 
+        optimizer = opt,
+        metrics = [tf.keras.metrics.AUC(name="AUC"), "accuracy"]
+        )
+    history = model.fit(
+        x = x_train, 
+        y = y_train, 
+        epochs = epochs, 
+        batch_size = batch_size,
+        validation_split = 0.2,
+        callbacks = [EarlyStopping('accuracy', patience=10, restore_best_weights = True)],
+        verbose = 2
+        )
     
     return model, history
 
-model, history = fit_model([ts_train, w_train], y_train, 200, 1024)
+model, history = fit_model([ts_train, w_train], y_train, 500, 1024)
+
+##
+model.summary()
+model.save("../models/dlmodel4.h5")
 
 #%%
 from sklearn.metrics import accuracy_score
@@ -150,10 +162,6 @@ yhat_test = model.predict([ts_test, w_test])
 yhat_test = (yhat_test > 0.5).astype("int")
 acc = accuracy_score(y_test, yhat_test)
 print("Test accuracy score:", acc)
-
-##
-model.summary()
-model.save("../models/dlmodel4.h5")
 
 #%%
 # plot training vs validation accuracy
