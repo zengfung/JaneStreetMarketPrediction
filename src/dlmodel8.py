@@ -52,9 +52,8 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     ts = Sequential([
         Input(shape = (130,1)),
         # LSTM layer
-        LSTM(units = 128, return_sequences = True),
-        LSTM(units = 128, return_sequences = True),
-        LSTM(units = 128, return_sequences = True),
+        LSTM(units = 64, return_sequences = True),
+        LSTM(units = 64, return_sequences = True),
         TimeDistributed(Dense(1)),
         Flatten()
         ])
