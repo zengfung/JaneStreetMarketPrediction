@@ -1,4 +1,4 @@
-# convolutional-regular hybrid neural network
+# LSTM 
 import pandas as pd
 
 x = pd.read_csv("../dataset/input_data.csv").to_numpy()
@@ -35,39 +35,27 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras import Input
 from tensorflow.keras import Model
-from tensorflow.keras.layers import Conv1D
-from tensorflow.keras.layers import MaxPooling1D
-from tensorflow.keras.layers import Flatten
 from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import LSTM
+from tensorflow.keras.layers import TimeDistributed
+from tensorflow.keras.layers import Flatten
 from tensorflow.keras.layers import Concatenate
 from tensorflow.keras.layers import Activation
 from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.layers import Dropout
 from tensorflow.keras.initializers import GlorotNormal
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.callbacks import EarlyStopping
 
 def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     # convolutional layers for time-series
     ts = Sequential([
         Input(shape = (130,1)),
-        # 1st set of convolution layer (16 -> 16 -> Maxpool)
-        Conv1D(filters = 16, kernel_size = 2, strides = 1, padding = "valid",
-               kernel_initializer = GlorotNormal()),
-        Activation(tf.keras.activations.relu),
-        Conv1D(filters = 16, kernel_size = 2, strides = 1, padding = "valid",
-                kernel_initializer = GlorotNormal()),
-        Activation(tf.keras.activations.relu),
-        MaxPooling1D(pool_size = 2, strides = 1, padding = "valid"),
-        # 2nd set of convolutional layer (64 -> 64 -> Maxpool)
-        Conv1D(filters = 64, kernel_size = 3, strides = 1, padding = "valid",
-               kernel_initializer = GlorotNormal()),
-        Activation(tf.keras.activations.relu),
-        Conv1D(filters = 64, kernel_size = 3, strides = 1, padding = "valid",
-                kernel_initializer = GlorotNormal()),
-        Activation(tf.keras.activations.relu),
-        MaxPooling1D(pool_size = 2, strides = 1, padding = "valid"),
-        # Flatten layer
+        # LSTM layer
+        LSTM(units = 128, return_sequences = True),
+        LSTM(units = 128, return_sequences = True),
+        LSTM(units = 128, return_sequences = True),
+        TimeDistributed(Dense(1)),
         Flatten()
         ])
     
@@ -79,37 +67,15 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     
     # concatenate ts and w
     model_concat = Concatenate(axis = -1)([ts.output, w.output])
-    # 1st set of layers (128 -> 128 -> 128 -> Dropout)
-    model_concat = Dense(units = 128, kernel_initializer = GlorotNormal())(model_concat)
-    model_concat = Activation(tf.keras.activations.relu)(model_concat)
-    model_concat = Dense(units = 128, kernel_initializer = GlorotNormal())(model_concat)
-    model_concat = BatchNormalization()(model_concat)
-    model_concat = Activation(tf.keras.activations.relu)(model_concat)
+    # 1st set of layers (128 -> Dropout -> 128 -> Dropout )
     model_concat = Dense(units = 128, kernel_initializer = GlorotNormal())(model_concat)
     model_concat = BatchNormalization()(model_concat)
     model_concat = Activation(tf.keras.activations.relu)(model_concat)
     model_concat = Dropout(0.2)(model_concat)
-    # 2nd set of layers (64 -> 64 -> 64 -> Dropout)
-    model_concat = Dense(units = 64, kernel_initializer = GlorotNormal())(model_concat)
-    model_concat = BatchNormalization()(model_concat)
-    model_concat = Activation(tf.keras.activations.relu)(model_concat)
-    model_concat = Dense(units = 64, kernel_initializer = GlorotNormal())(model_concat)
-    model_concat = BatchNormalization()(model_concat)
-    model_concat = Activation(tf.keras.activations.relu)(model_concat)
-    model_concat = Dense(units = 64, kernel_initializer = GlorotNormal())(model_concat)
+    model_concat = Dense(units = 128, kernel_initializer = GlorotNormal())(model_concat)
     model_concat = BatchNormalization()(model_concat)
     model_concat = Activation(tf.keras.activations.relu)(model_concat)
     model_concat = Dropout(0.2)(model_concat)
-    # 3rd set of layers (32 -> 32 -> 32)
-    model_concat = Dense(units = 32, kernel_initializer = GlorotNormal())(model_concat)
-    model_concat = BatchNormalization()(model_concat)
-    model_concat = Activation(tf.keras.activations.relu)(model_concat)
-    model_concat = Dense(units = 32, kernel_initializer = GlorotNormal())(model_concat)
-    model_concat = BatchNormalization()(model_concat)
-    model_concat = Activation(tf.keras.activations.relu)(model_concat)
-    model_concat = Dense(units = 32, kernel_initializer = GlorotNormal())(model_concat)
-    model_concat = BatchNormalization()(model_concat)
-    model_concat = Activation(tf.keras.activations.relu)(model_concat)
     # output layer
     model_concat = Dense(units = 1, activation = "sigmoid")(model_concat)
     
@@ -117,9 +83,7 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     model = Model(inputs = [ts.input, w.input], outputs = model_concat)
     
     # fit model
-    learning_rate = 0.01
-    decay_rate = learning_rate / epochs
-    opt = Adam(learning_rate = learning_rate, decay = decay_rate)
+    opt = SGD(learning_rate = 0.05, momentum = 0.9, decay = 0.0005, nesterov = True)
     model.compile(
         loss = "binary_crossentropy", 
         optimizer = opt,
@@ -131,7 +95,7 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
         epochs = epochs, 
         batch_size = batch_size,
         validation_split = 0.2,
-        callbacks = [EarlyStopping('accuracy', patience=10, restore_best_weights = True)],
+        callbacks = [EarlyStopping('val_accuracy', patience=20, restore_best_weights = True)],
         verbose = 2
         )
     
@@ -141,7 +105,7 @@ model, history = fit_model([ts_train, w_train], y_train, 500, 1024)
 
 ##
 model.summary()
-model.save("../models/dlmodel4.h5")
+model.save("../models/dlmodel8.h5")
 
 #%%
 from sklearn.metrics import accuracy_score
@@ -177,5 +141,5 @@ ax2.set_ylabel("Loss", fontsize = 8)
 ax2.set_title("Loss", fontsize = 10)
 ax2.legend(fontsize = 8)
 
-fig.savefig("../results/dlmodel4.png")
+fig.savefig("../results/dlmodel8.png")
 fig.show()

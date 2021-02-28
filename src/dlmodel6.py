@@ -37,7 +37,6 @@ from tensorflow.keras import Input
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Conv1D
 from tensorflow.keras.layers import AveragePooling1D
-from tensorflow.keras.layers import SpatialDropout1D
 from tensorflow.keras.layers import Flatten
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Concatenate
@@ -52,12 +51,11 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     # convolutional layers for time-series
     ts = Sequential([
         Input(shape = (130,1)),
-        # 1st set of convolution layer (8 -> AvgPool -> Dropout)
+        # 1st set of convolution layer (8 -> AvgPool)
         Conv1D(filters = 8, kernel_size = 3, strides = 1, padding = "valid",
                kernel_initializer = GlorotNormal()),
         Activation(tf.keras.activations.tanh),
         AveragePooling1D(pool_size = 2, strides = 2, padding = "valid"),
-        SpatialDropout1D(0.5),
         
         # 2nd set of convolutional layer (16 -> AvgPool)
         Conv1D(filters = 16, kernel_size = 5, strides = 1, padding = "valid",
@@ -77,15 +75,13 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     
     # concatenate ts and w
     model_concat = Concatenate(axis = -1)([ts.output, w.output])
-    # 1st set of layers (128 -> Dropout -> 64 -> Dropout )
+    # 1st set of layers (128 -> 64)
     model_concat = Dense(units = 128, kernel_initializer = GlorotNormal())(model_concat)
     model_concat = BatchNormalization()(model_concat)
     model_concat = Activation(tf.keras.activations.tanh)(model_concat)
-    model_concat = Dropout(0.5)(model_concat)
     model_concat = Dense(units = 64, kernel_initializer = GlorotNormal())(model_concat)
     model_concat = BatchNormalization()(model_concat)
     model_concat = Activation(tf.keras.activations.tanh)(model_concat)
-    model_concat = Dropout(0.5)(model_concat)
     # output layer
     model_concat = Dense(units = 1, activation = "sigmoid")(model_concat)
     
@@ -93,7 +89,7 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     model = Model(inputs = [ts.input, w.input], outputs = model_concat)
     
     # fit model
-    opt = SGD(learning_rate = 0.1, momentum = 0.9, decay = 0.0005)
+    opt = SGD(learning_rate = 0.01, momentum = 0.9, decay = 0.0005)
     model.compile(
         loss = "binary_crossentropy", 
         optimizer = opt,

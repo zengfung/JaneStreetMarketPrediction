@@ -37,7 +37,6 @@ from tensorflow.keras import Input
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Conv1D
 from tensorflow.keras.layers import MaxPooling1D
-from tensorflow.keras.layers import SpatialDropout1D
 from tensorflow.keras.layers import Flatten
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Concatenate
@@ -57,14 +56,12 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
                kernel_initializer = GlorotNormal()),
         Activation(tf.keras.activations.relu),
         MaxPooling1D(pool_size = 2, strides = 2, padding = "valid"),
-        SpatialDropout1D(0.2),
         
         # 2nd set of convolutional layer (256 -> MaxPool)
         Conv1D(filters = 256, kernel_size = 5, strides = 1, padding = "same",
                kernel_initializer = GlorotNormal()),
         Activation(tf.keras.activations.relu),
         MaxPooling1D(pool_size = 2, strides = 2, padding = "valid"),
-        SpatialDropout1D(0.2),
 
         # 3rd set of convolutional layer (384 -> 384 -> 256 -> MaxPool)
         Conv1D(filters = 384, kernel_size = 3, strides = 1, padding = "same",
@@ -73,7 +70,6 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
         Conv1D(filters = 384, kernel_size = 3, strides = 1, padding = "same",
                kernel_initializer = GlorotNormal()),
         Activation(tf.keras.activations.relu),
-        SpatialDropout1D(0.2),
         Conv1D(filters = 256, kernel_size = 3, strides = 1, padding = "same",
                kernel_initializer = GlorotNormal()),
         Activation(tf.keras.activations.relu),
@@ -95,6 +91,7 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     model_concat = Dense(units = 256, kernel_initializer = GlorotNormal())(model_concat)
     model_concat = BatchNormalization()(model_concat)
     model_concat = Activation(tf.keras.activations.relu)(model_concat)
+    model_concat = Dropout(0.2)(model_concat)
     model_concat = Dense(units = 256, kernel_initializer = GlorotNormal())(model_concat)
     model_concat = BatchNormalization()(model_concat)
     model_concat = Activation(tf.keras.activations.relu)(model_concat)
