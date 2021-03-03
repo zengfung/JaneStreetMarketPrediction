@@ -1,6 +1,8 @@
 import pywt
 import numpy as np
 import matplotlib.pyplot as plt
+import collections
+from scipy.stats import entropy
 
 
 # select best threshold value
@@ -23,7 +25,7 @@ def best_threshold_value(coef, makeplot = False):
 
     # compute elbow method
     ix, A, v = [], [], []
-    for j in range(4):
+    for j in range(3):
         if j == 0:
             ix_j, A_j, v_j = find_elbow(x, y)
         else:
@@ -101,12 +103,6 @@ def threshold_vs_relerror_plot(x, y, ix, A, v):
     ax.plot([x[ix[2]], dropto[0]], [y[ix[2]], dropto[1]], color = "red", linestyle = "-", linewidth = 2)    # perpendicular line
     ax.scatter(x[ix[2]], y[ix[2]], color = "red", linewidth = 2)                                            # higlight point
 
-    # fourth elbow point
-    ax.plot([x[0], x[ix[2]]], [y[0], y[ix[2]]], color = "cyan", linestyle = "-", linewidth = 2)              # diagonal line
-    dropto = np.array([x[0], y[0]]) + A[3][ix[3]] * (v[3] * np.array([xmax, ymax])) 
-    ax.plot([x[ix[3]], dropto[0]], [y[ix[3]], dropto[1]], color = "cyan", linestyle = "-", linewidth = 2)    # perpendicular line
-    ax.scatter(x[ix[3]], y[ix[3]], color = "cyan", linewidth = 2)                                            # higlight point
-
     fig.show()
     return
 
@@ -153,6 +149,7 @@ def denoise_signals(x_train, x_test, wt = "haar"):
 
     return x_train_denoised, x_test_denoised, t
 
+# DELETE!
 # turn the weights into an extra channel
 def weights2channels(x, weights):
     (N, n) = x.shape
@@ -163,3 +160,99 @@ def weights2channels(x, weights):
         x_new[i,:,1] = weights[i]
     
     return x_new
+
+# calculates entropy of a signal
+def calculate_entropy(list_values):
+    counter_values = collections.Counter(list_values).most_common()
+    probabilities = [elem[1]/len(list_values) for elem in counter_values]
+    et = entropy(probabilities)
+    return et
+
+# get summary statistics of the signal
+def calculate_statistics(list_values):
+    n5 = np.nanpercentile(list_values, 5)
+    n25 = np.nanpercentile(list_values, 25)
+    n75 = np.nanpercentile(list_values, 75)
+    n95 = np.nanpercentile(list_values, 95)
+    median = np.nanpercentile(list_values, 50)
+    mean = np.nanmean(list_values)
+    std = np.nanstd(list_values)
+    var = np.nanvar(list_values)
+    rms = np.sqrt(np.nanmean(list_values**2))
+    return [n5, n25, n75, n95, median, mean, std, var, rms]
+
+# calculate crossings in the signal
+def calculate_crossings(list_values):
+    zero_crossing_indices = np.nonzero(np.diff(np.array(list_values) > 0))[0]
+    no_zero_crossings = len(zero_crossing_indices)
+    mean_crossing_indices = np.nonzero(np.diff(np.array(list_values) > np.nanmean(list_values)))[0]
+    no_mean_crossings = len(mean_crossing_indices)
+    return [no_zero_crossings, no_mean_crossings]
+
+# get features of signal
+def get_features(list_values):
+    et = calculate_entropy(list_values)
+    crossings = calculate_crossings(list_values)
+    statistics = calculate_statistics(list_values)
+    return [et] + crossings + statistics
+
+# gets features for all signals by calling get_features()
+def get_signals_features(x, wt):
+    (N, n) = x.shape
+    max_level = pywt.dwt_max_level(n, wt)
+    features = np.zeros((N, (max_level + 1) * 12))
+    for i in range(N):
+        list_coef = pywt.wavedec(x[i,:], wt, mode = "periodization", level = max_level)
+        for (j, coef) in enumerate(list_coef):
+            features[i, (j*12):((j+1)*12)] = np.asarray(get_features(coef))
+    return features
+
+# obtains scalogram of a signal
+def get_scalogram(x, wt = "morl"):
+    n = x.shape[0]
+    scales = range(1, n+1)
+    coef, freq = pywt.cwt(x, scales, wt)
+    coef_ = coef[:,:130]
+    return np.power(coef_, 2)
+
+# obtains scalogram for all signals
+def get_signals_scalogram(x, wt = "morl"):
+    N, n = x.shape
+    scalograms = np.zeros((N, n, n))
+    for i in range(N):
+        scalograms[i,:,:] = get_scalogram(x[i,:], wt)
+    return scalograms
+
+# plot the scalogram
+def plot_scalogram(x, y, wt = "morl", count = 9):
+    n = x.shape[1]
+    scales = range(1, n+1)
+    i = 0
+    counter_1, counter_0 = 0, 0
+    fig1, ax1 = plt.subplots(3,3)
+    fig1.suptitle("Energy map for Action = 1")
+    fig0, ax0 = plt.subplots(3,3)
+    fig0.suptitle("Energy map for Action = 0")
+    
+    while True:
+        coef,_ = pywt.cwt(x[i,:], scales, wt)
+        pw = np.power(coef, 2)
+        if counter_1 < 9 and y[i,0] == 1:
+            row = counter_1 // 3
+            col = counter_1 % 3
+            ax1[row, col].contourf(pw)
+            counter_1 += 1
+        elif counter_0 < 9 and y[i,0] == 0:
+            col = counter_0 % 3
+            row = counter_0 // 3
+            ax0[row, col].contourf(pw)
+            counter_0 += 1
+        elif counter_1 >= 9 and counter_0 >= 9:
+            break
+        i += 1
+    
+    fig1.savefig("../results/energymaps1.png")
+    fig0.savefig("../results/energymaps0.png")
+    fig1.show()
+    fig0.show()
+    
