@@ -138,6 +138,5 @@ dataset/
 # vscode cache
 **.vscode/
 
-# models and results
-models/**
+# results
 results/**

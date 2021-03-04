@@ -30,13 +30,13 @@ print("Train size:", y_train.shape[0], "; % trues:", np.sum(y_train)/y_train.sha
 print("Test size:", y_test.shape[0], "; % trues:", np.sum(y_test)/y_test.shape[0])
 
 #%%
-# denoising of signals + get features of signals
-from utils import denoise_signals, get_signals_features
-# ts_train, ts_test, t = denoise_signals(ts_train, ts_test, "sym4")
+pca = PCA()
+ts_pca = pca.fit(ts_train)
+num_components = np.where(np.cumsum(pca.explained_variance_ratio_)>0.99)[0][0] + 1
 
-wt = "haar"
-tsfeatures_train = get_signals_features(ts_train, wt)
-tsfeatures_test = get_signals_features(ts_test, wt)
+tsfeatures_train = pca.transform(ts_train)[:,:num_components]
+tsfeatures_test = pca.transform(ts_test)[:,:num_components]
+print("Number of PCA features used:", num_components)
 
 #%%
 # building model
@@ -55,24 +55,14 @@ from tensorflow.keras.callbacks import EarlyStopping
 
 def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     n_features = x_train[0].shape[1]       # number of features/columns
-    # convolutional layers for time-series
+    # 1st set of layers (128 -> Dropout -> 128 -> Dropout)
     ts = Sequential([
         Input(shape = (n_features,)),
-        Dense(units = 64, kernel_initializer = GlorotNormal()),
+        Dense(units = 128, kernel_initializer = GlorotNormal()),
+        BatchNormalization(),
         Activation(tf.keras.activations.relu),
-        Dense(units = 64, kernel_initializer = GlorotNormal()),
-        Activation(tf.keras.activations.relu),
-        Dense(units = 64, kernel_initializer = GlorotNormal()),
-        Activation(tf.keras.activations.relu),
-        Dense(units = 64, kernel_initializer = GlorotNormal()),
-        Activation(tf.keras.activations.relu),
-        Dense(units = 32, kernel_initializer = GlorotNormal()),
-        Activation(tf.keras.activations.relu),
-        Dense(units = 32, kernel_initializer = GlorotNormal()),
-        Activation(tf.keras.activations.relu),
-        Dense(units = 32, kernel_initializer = GlorotNormal()),
-        Activation(tf.keras.activations.relu),
-        Dense(units = 32, kernel_initializer = GlorotNormal()),
+        Dense(units = 128, kernel_initializer = GlorotNormal()),
+        BatchNormalization(),
         Activation(tf.keras.activations.relu),
         ])
     
@@ -80,28 +70,19 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     w = Sequential([
         Input(shape = (1,)),
         Dense(units = 4, kernel_initializer = GlorotNormal()),
+        BatchNormalization(),
         Activation(tf.keras.activations.relu)
         ])
     
     # concatenate ts and w
     model_concat = Concatenate(axis = -1)([ts.output, w.output])
-    # 1st set of layers (128 -> Dropout -> 128 -> Dropout )
-    model_concat = Dense(units = 64, kernel_initializer = GlorotNormal())(model_concat)
+   
+    # 2nd set of layers (256 -> Dropout -> 256 -> Dropout)
+    model_concat = Dense(units = 256, kernel_initializer = GlorotNormal())(model_concat)
+    model_concat = BatchNormalization()(model_concat)
     model_concat = Activation(tf.keras.activations.relu)(model_concat)
-    model_concat = Dense(units = 64, kernel_initializer = GlorotNormal())(model_concat)
-    model_concat = Activation(tf.keras.activations.relu)(model_concat)
-    model_concat = Dense(units = 64, kernel_initializer = GlorotNormal())(model_concat)
-    model_concat = Activation(tf.keras.activations.relu)(model_concat)
-    model_concat = Dense(units = 64, kernel_initializer = GlorotNormal())(model_concat)
-    model_concat = Activation(tf.keras.activations.relu)(model_concat)
-    # 2nd set of layers (64 -> Dropout -> 64 -> Dropout )
-    model_concat = Dense(units = 32, kernel_initializer = GlorotNormal())(model_concat)
-    model_concat = Activation(tf.keras.activations.relu)(model_concat)
-    model_concat = Dense(units = 32, kernel_initializer = GlorotNormal())(model_concat)
-    model_concat = Activation(tf.keras.activations.relu)(model_concat)
-    model_concat = Dense(units = 32, kernel_initializer = GlorotNormal())(model_concat)
-    model_concat = Activation(tf.keras.activations.relu)(model_concat)
-    model_concat = Dense(units = 32, kernel_initializer = GlorotNormal())(model_concat)
+    model_concat = Dense(units = 256, kernel_initializer = GlorotNormal())(model_concat)
+    model_concat = BatchNormalization()(model_concat)
     model_concat = Activation(tf.keras.activations.relu)(model_concat)
     # output layer
     model_concat = Dense(units = 1, activation = "sigmoid")(model_concat)
@@ -110,7 +91,7 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     model = Model(inputs = [ts.input, w.input], outputs = model_concat)
     
     # fit model
-    opt = SGD(learning_rate = 5e-2, momentum = 0.9, decay = 0.0005, nesterov = False)
+    opt = SGD(learning_rate = 1, momentum = 0.9, decay = 0.0005, nesterov = False)
     model.compile(
         loss = "binary_crossentropy", 
         optimizer = opt,
