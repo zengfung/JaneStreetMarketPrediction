@@ -1,8 +1,8 @@
-# LeNet5-inspired convolutional-regular neural network
+# PCA + short ANN
 import pandas as pd
 
-x = pd.read_csv("../dataset/input_data.csv").to_numpy()
-resp = pd.read_csv("../dataset/output_data.csv")
+x = pd.read_csv("../dataset/input_data.csv", nrows = 10000).to_numpy()
+resp = pd.read_csv("../dataset/output_data.csv", nrows = 10000)
 
 #%%
 # run PCA on resp values + set action = 1 if PCA'd resp value > 0
@@ -30,14 +30,20 @@ print("Train size:", y_train.shape[0], "; % trues:", np.sum(y_train)/y_train.sha
 print("Test size:", y_test.shape[0], "; % trues:", np.sum(y_test)/y_test.shape[0])
 
 #%%
+pca = PCA()
+ts_pca = pca.fit(ts_train)
+num_components = np.where(np.cumsum(pca.explained_variance_ratio_)>0.99)[0][0] + 1
+
+tsfeatures_train = pca.transform(ts_train)[:,:num_components]
+tsfeatures_test = pca.transform(ts_test)[:,:num_components]
+print("Number of PCA features used:", num_components)
+
+#%%
 # building model
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras import Input
 from tensorflow.keras import Model
-from tensorflow.keras.layers import Conv1D
-from tensorflow.keras.layers import AveragePooling1D
-from tensorflow.keras.layers import Flatten
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Concatenate
 from tensorflow.keras.layers import Activation
@@ -48,40 +54,45 @@ from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.callbacks import EarlyStopping
 
 def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
-    # convolutional layers for time-series
+    n_features = x_train[0].shape[1]       # number of features/columns
     ts = Sequential([
-        Input(shape = (130,1)),
-        # 1st set of convolution layer (8 -> AvgPool)
-        Conv1D(filters = 8, kernel_size = 3, strides = 1, padding = "valid",
-               kernel_initializer = GlorotNormal()),
-        Activation(tf.keras.activations.tanh),
-        AveragePooling1D(pool_size = 2, strides = 2, padding = "valid"),
-        
-        # 2nd set of convolutional layer (16 -> AvgPool)
-        Conv1D(filters = 16, kernel_size = 5, strides = 1, padding = "valid",
-               kernel_initializer = GlorotNormal()),
-        Activation(tf.keras.activations.tanh),
-        AveragePooling1D(pool_size = 2, strides = 2, padding = "valid"),
-        
-        # Flatten layer
-        Flatten()
+        Input(shape = (n_features,)),
+        # 1st set of layers (64 -> 128 -> 256)
+		Dense(units = 64, kernel_initializer = GlorotNormal()),
+        BatchNormalization(),
+        Activation(tf.keras.activations.relu),
+        Dense(units = 128, kernel_initializer = GlorotNormal()),
+        BatchNormalization(),
+        Activation(tf.keras.activations.relu),
+        Dense(units = 256, kernel_initializer = GlorotNormal()),
+        BatchNormalization(),
+        Activation(tf.keras.activations.relu),
+        Dropout(0.1)
         ])
     
     # regular layer for weight
     w = Sequential([
         Input(shape = (1,)),
-        Dense(units = 4, kernel_initializer = GlorotNormal())
+        Dense(units = 4, kernel_initializer = GlorotNormal()),
+        BatchNormalization(),
+        Activation(tf.keras.activations.relu)
         ])
     
     # concatenate ts and w
     model_concat = Concatenate(axis = -1)([ts.output, w.output])
-    # 1st set of layers (128 -> 64)
+   
+    # 3rd set of layers (512 -> 128 -> 32)
+    model_concat = Dense(units = 512, kernel_initializer = GlorotNormal())(model_concat)
+    model_concat = BatchNormalization()(model_concat)
+    model_concat = Activation(tf.keras.activations.relu)(model_concat)
+    model_concat = Dropout(0.1)(model_concat)
     model_concat = Dense(units = 128, kernel_initializer = GlorotNormal())(model_concat)
     model_concat = BatchNormalization()(model_concat)
-    model_concat = Activation(tf.keras.activations.tanh)(model_concat)
-    model_concat = Dense(units = 64, kernel_initializer = GlorotNormal())(model_concat)
+    model_concat = Activation(tf.keras.activations.relu)(model_concat)
+    model_concat = Dense(units = 32, kernel_initializer = GlorotNormal())(model_concat)
     model_concat = BatchNormalization()(model_concat)
-    model_concat = Activation(tf.keras.activations.tanh)(model_concat)
+    model_concat = Activation(tf.keras.activations.relu)(model_concat)
+ 
     # output layer
     model_concat = Dense(units = 1, activation = "sigmoid")(model_concat)
     
@@ -89,7 +100,7 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
     model = Model(inputs = [ts.input, w.input], outputs = model_concat)
     
     # fit model
-    opt = SGD(learning_rate = 0.01, momentum = 0.9, decay = 0.0005)
+    opt = SGD(learning_rate = 0.5, momentum = 0.9, decay = 0.0005, nesterov = True)
     model.compile(
         loss = "binary_crossentropy", 
         optimizer = opt,
@@ -101,13 +112,13 @@ def fit_model(x_train, y_train, epochs = 100, batch_size = 1024):
         epochs = epochs, 
         batch_size = batch_size,
         validation_split = 0.2,
-        callbacks = [EarlyStopping('accuracy', patience=10, restore_best_weights = True)],
+        callbacks = [EarlyStopping('val_accuracy', patience=50, restore_best_weights = True)],
         verbose = 2
         )
     
     return model, history
 
-model, history = fit_model([ts_train, w_train], y_train, 500, 1024)
+model, history = fit_model([tsfeatures_train, w_train], y_train, 500, 1024)
 
 ##
 model.summary()
@@ -116,12 +127,12 @@ model.save("../models/dlmodel6.h5")
 #%%
 from sklearn.metrics import accuracy_score
 
-yhat_train = model.predict([ts_train, w_train])
+yhat_train = model.predict([tsfeatures_train, w_train])
 yhat_train = (yhat_train > 0.5).astype("int")
 acc = accuracy_score(y_train, yhat_train)
 print("Train accuracy score:", acc)
 
-yhat_test = model.predict([ts_test, w_test])
+yhat_test = model.predict([tsfeatures_test, w_test])
 yhat_test = (yhat_test > 0.5).astype("int")
 acc = accuracy_score(y_test, yhat_test)
 print("Test accuracy score:", acc)

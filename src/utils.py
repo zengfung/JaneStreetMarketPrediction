@@ -255,4 +255,4 @@ def plot_scalogram(x, y, wt = "morl", count = 9):
     fig0.savefig("../results/energymaps0.png")
     fig1.show()
     fig0.show()
-    
+   
