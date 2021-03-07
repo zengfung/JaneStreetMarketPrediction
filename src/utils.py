@@ -3,7 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import collections
 from scipy.stats import entropy
-
+from sklearn.decomposition import PCA
+from sklearn.metrics import accuracy_score
+from tensorflow.keras.models import load_model
 
 # select best threshold value
 def best_threshold_value(coef, makeplot = False):
@@ -256,3 +258,54 @@ def plot_scalogram(x, y, wt = "morl", count = 9):
     fig1.show()
     fig0.show()
    
+# load models
+def load_keras_models(names):
+    all_models = list()
+    for filename in names:
+        model = load_model(filename)
+        all_models.append(model)
+        print("Loaded {0}".format(filename))
+    return all_models
+
+# transforming inputs
+def transform_inputs(train, test, types):
+    train_stack = list()
+    test_stack = list()
+    for input_type in types:
+        if input_type == "combine":
+            train_stack.append([train])
+            test_stack.append([test])
+            print("combine-type transform success!")
+        elif input_type == "split":
+            [w_train, ts_train] = [train[:,0], train[:,1:]]
+            [w_test, ts_test] = [test[:,0], test[:,1:]]
+            train_stack.append([ts_train, w_train])
+            test_stack.append([ts_test, w_test])
+            print("split-type transform success!")
+        elif input_type == "pca_split":
+            [w_train, ts_train] = [train[:,0], train[:,1:]]
+            [w_test, ts_test] = [test[:,0], test[:,1:]]
+            pca = PCA(n_components = 57).fit(ts_train)
+            tsf_train = pca.transform(ts_train)
+            tsf_test = pca.transform(ts_test)
+            train_stack.append([tsf_train, w_train])
+            test_stack.append([tsf_test, w_test])
+            print("pca_split-type transform success!")
+        else: 
+            raise Exception("Invalid transform type!")
+    return [train_stack, test_stack]
+
+# prediction accuracies for each model
+def individual_prediction(members, x_train, y_train, x_test, y_test, results={}):
+    for (i, model) in enumerate(members):
+        print("Model {0}:".format(i+1))
+        yhat_train = model.predict(x_train[i])
+        yhat_train = (yhat_train > 0.5).astype("int")
+        train_acc = accuracy_score(y_train, yhat_train)
+        print("Train accuracy:", train_acc)
+        yhat_test = model.predict(x_test[i])
+        yhat_test = (yhat_test > 0.5).astype("int")
+        test_acc = accuracy_score(y_test, yhat_test)
+        print("Test accuracy:", test_acc)
+        results["Model {0}".format(i+1)] = {"Train": train_acc, "Test": test_acc}
+    return results
