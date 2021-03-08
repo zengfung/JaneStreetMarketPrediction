@@ -309,3 +309,29 @@ def individual_prediction(members, x_train, y_train, x_test, y_test, results={})
         print("Test accuracy:", test_acc)
         results["Model {0}".format(i+1)] = {"Train": train_acc, "Test": test_acc}
     return results
+
+# obtain outputs from deep learning models
+def get_ensemble_input(members, x, n):
+	k = len(members)
+	result = np.zeros((n,k))
+	for (i, model) in enumerate(members):
+		yhat = model.predict(x[i])
+		result[:,i] = yhat.reshape((-1,))
+	return result
+
+# fit ensemble model
+def fit_ensemble(members, x, y, n, model_type):
+	# get ensemble model input
+	ensemble_input = get_ensemble_input(members, x, n)
+	# fit ensemble model
+	model_type.fit(ensemble_input, y)
+	return model_type
+
+# make prediction using ensemble model
+def ensemble_predict(members, model, x, n):
+	# get ensemble model input
+	ensemble_input = get_ensemble_input(members, x, n)
+	# make prediction
+	yhat = model.predict(ensemble_input)
+	return yhat
+
