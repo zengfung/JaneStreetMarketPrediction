@@ -47,10 +47,20 @@ members = load_keras_models(model_files)
 
 # result dictionary to keep track of model results
 results = {}
-# decision tree ensemble
+## decision tree ensemble
 print("\nDECISION TREE ENSEMBLE:")
 from sklearn.tree import DecisionTreeClassifier
-ensemble_model = fit_ensemble(members, ensembleX_train, y_train, train_size, DecisionTreeClassifier())
+model = DecisionTreeClassifier()
+params = {"criterion" : ["gini", "entropy"],
+          "splitter" : ["best", "random"],
+          "min_samples_split" : [2, 20, 200]}
+ensemble_model = fit_ensemble(members, ensembleX_train, y_train, train_size, model, params)
+# grid search results
+ensemble_results = pd.DataFrame.from_dict(ensemble_model.cv_results_)
+print(ensemble_results)
+ensemble_results.to_csv("../results/ensembles_decisiontree.csv")
+print("Best model score:", ensemble_model.best_score_)
+print(ensemble_model.best_params_)
 # predict output using ensemble model
 yhat_train = ensemble_predict(members, ensemble_model, ensembleX_train, train_size)
 train_acc = accuracy_score(y_train, yhat_train)
@@ -63,7 +73,18 @@ results["DecisionTree(E)"] = {"Train": train_acc, "Test": test_acc}
 # random forest ensemble
 print("\nRANDOM FOREST ENSEMBLE:")
 from sklearn.ensemble import RandomForestClassifier
-ensemble_model = fit_ensemble(members, ensembleX_train, y_train, train_size, RandomForestClassifier())
+model = RandomForestClassifier()
+params = {"n_estimators" : [50, 100, 500],
+          "criterion" : ["gini", "entropy"],
+          "min_samples_split" : [2, 20, 200],
+          "max_features" : ["auto", "sqrt", "log2", None]}
+ensemble_model = fit_ensemble(members, ensembleX_train, y_train, train_size, model, params)
+# grid search results
+ensemble_results = pd.DataFrame.from_dict(ensemble_model.cv_results_)
+print(ensemble_results)
+ensemble_results.to_csv("../results/ensembles_randomforest.csv")
+print("Best model score:", ensemble_model.best_score_)
+print(ensemble_model.best_params_)
 # predict output using ensemble model
 yhat_train = ensemble_predict(members, ensemble_model, ensembleX_train, train_size)
 train_acc = accuracy_score(y_train, yhat_train)
@@ -76,7 +97,17 @@ results["RandomForest(E)"] = {"Train": train_acc, "Test": test_acc}
 # adaboost ensemble
 print("\nADABOOST ENSEMBLE:")
 from sklearn.ensemble import AdaBoostClassifier
-ensemble_model = fit_ensemble(members, ensembleX_train, y_train, train_size, AdaBoostClassifier())
+model = AdaBoostClassifier()
+params = {"n_estimators" : [50, 100, 500],
+          "learning_rate" : [0.1, 1, 10], 
+          "max_features" : ["auto", "sqrt", "log2", None]}
+ensemble_model = fit_ensemble(members, ensembleX_train, y_train, train_size, model, params)
+# grid search results
+ensemble_results = pd.DataFrame.from_dict(ensemble_model.cv_results_)
+print(ensemble_results)
+ensemble_results.to_csv("../results/ensembles_adaboost.csv")
+print("Best model score:", ensemble_model.best_score_)
+print(ensemble_model.best_params_)
 # predict output using ensemble model
 yhat_train = ensemble_predict(members, ensemble_model, ensembleX_train, train_size)
 train_acc = accuracy_score(y_train, yhat_train)
@@ -89,7 +120,18 @@ results["AdaBoost(E)"] = {"Train": train_acc, "Test": test_acc}
 # gradient boosting ensemble
 print("\nGRADIENT BOOSTING ENSEMBLE:")
 from sklearn.ensemble import GradientBoostingClassifier
-ensemble_model = fit_ensemble(members, ensembleX_train, y_train, train_size, GradientBoostingClassifier())
+model = GradientBoostingClassifier()
+params = {"loss" : ["deviance", "exponential"],
+          "learning_rate" : [0.01, 1, 10], 
+          "n_estimators" : [50, 100, 500],
+          "subsample" : [0.5, 0.75, 1.0]}
+ensemble_model = fit_ensemble(members, ensembleX_train, y_train, train_size, model, params)
+# grid search results
+ensemble_results = pd.DataFrame.from_dict(ensemble_model.cv_results_)
+print(ensemble_results)
+ensemble_results.to_csv("../results/ensembles_gradientboosting.csv")
+print("Best model score:", ensemble_model.best_score_)
+print(ensemble_model.best_params_)
 # predict output using ensemble model
 yhat_train = ensemble_predict(members, ensemble_model, ensembleX_train, train_size)
 train_acc = accuracy_score(y_train, yhat_train)

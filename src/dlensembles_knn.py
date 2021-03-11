@@ -50,12 +50,23 @@ results = {}
 # KNN ensemble
 print("\nK-NEAREST NEIGHBOURS ENSEMBLE:")
 from sklearn.neighbors import KNeighborsClassifier
-ensemble_model = fit_ensemble(members, ensembleX_train, y_train, train_size, KNeighborsClassifier(n_neighbors=100))
+params = {"n_neighbors" : [5, 50, 500],
+		  "weights" : ["uniform", "distance"]}
+model = KNeighborsClassifier()
+ensemble_models = fit_ensemble(members, ensembleX_train, y_train, train_size, model, params)
+
+# grid search results
+ensemble_results = pd.DataFrame.from_dict(ensemble_models.cv_results_)
+print(ensemble_results)
+ensemble_results.to_csv("../results/ensembles_knn.csv")
+print("Best model score:", ensemble_models.best_score_)
+print(ensemble_models.best_params_)
+
 # predict output using ensemble model
-yhat_train = ensemble_predict(members, ensemble_model, ensembleX_train, train_size)
+yhat_train = ensemble_predict(members, ensemble_models, ensembleX_train, train_size)
 train_acc = accuracy_score(y_train, yhat_train)
 print("Train accuracy:", train_acc)
-yhat_test = ensemble_predict(members, ensemble_model, ensembleX_test, test_size)
+yhat_test = ensemble_predict(members, ensemble_models, ensembleX_test, test_size)
 test_acc = accuracy_score(y_test, yhat_test)
 print("Test accuracy:", test_acc)
 results["KNN(E)"] = {"Train": train_acc, "Test": test_acc}

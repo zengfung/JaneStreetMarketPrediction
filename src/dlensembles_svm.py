@@ -50,7 +50,16 @@ results = {}
 # SVM ensemble
 print("\nSVM ENSEMBLE:")
 from sklearn.svm import SVC
-ensemble_model = fit_ensemble(members, ensembleX_train, y_train, train_size, SVC(kernel = "rbf"))
+model = SVC(verbose = True, max_iter = 1e4)
+params = {"kernel" : ["linear", "rbf", "poly", "sigmoid"],
+          "C" : [0.1, 1, 10]}
+ensemble_model = fit_ensemble(members, ensembleX_train, y_train, train_size, model, params)
+# grid search results
+ensemble_results = pd.DataFrame.from_dict(ensemble_model.cv_results_)
+print(ensemble_results)
+ensemble_results.to_csv("../results/ensembles_svm.csv")
+print("Best model score:", ensemble_model.best_score_)
+print(ensemble_model.best_params_)
 # predict output using ensemble model
 yhat_train = ensemble_predict(members, ensemble_model, ensembleX_train, train_size)
 train_acc = accuracy_score(y_train, yhat_train)

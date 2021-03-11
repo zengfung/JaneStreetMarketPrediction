@@ -138,10 +138,12 @@ dataset/
 # vscode cache
 **.vscode/
 
-# results and models
+# results, resources, and models
 results/**
 models/**
+resources/**
 
 # google docs and google sheet
 **.gsheet
 **.gdoc
+

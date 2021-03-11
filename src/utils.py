@@ -6,6 +6,7 @@ from scipy.stats import entropy
 from sklearn.decomposition import PCA
 from sklearn.metrics import accuracy_score
 from tensorflow.keras.models import load_model
+from sklearn.model_selection import GridSearchCV
 
 # select best threshold value
 def best_threshold_value(coef, makeplot = False):
@@ -320,12 +321,12 @@ def get_ensemble_input(members, x, n):
 	return result
 
 # fit ensemble model
-def fit_ensemble(members, x, y, n, model_type):
+def fit_ensemble(members, x, y, n, model_type, params):
 	# get ensemble model input
-	ensemble_input = get_ensemble_input(members, x, n)
-	# fit ensemble model
-	model_type.fit(ensemble_input, y)
-	return model_type
+    ensemble_input = get_ensemble_input(members, x, n)
+    clf = GridSearchCV(model_type, params, refit = True, n_jobs = -1, return_train_score = True)
+    clf.fit(ensemble_input, y)
+    return clf
 
 # make prediction using ensemble model
 def ensemble_predict(members, model, x, n):

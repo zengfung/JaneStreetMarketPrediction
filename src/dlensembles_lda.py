@@ -58,7 +58,7 @@ print("Train accuracy:", train_acc)
 yhat_test = ensemble_predict(members, ensemble_model, ensembleX_test, test_size)
 test_acc = accuracy_score(y_test, yhat_test)
 print("Test accuracy:", test_acc)
-results["LogisticRegression(E)"] = {"Train": train_acc, "Test": test_acc}
+results["LDA(E)"] = {"Train": train_acc, "Test": test_acc}
 
 # results to data frame
 df = pd.DataFrame.from_dict(results, orient = "index")

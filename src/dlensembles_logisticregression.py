@@ -50,7 +50,16 @@ results = {}
 # logistic regression ensemble
 print("\nLOGISTIC REGRESSION ENSEMBLE:")
 from sklearn.linear_model import LogisticRegression
-ensemble_model = fit_ensemble(members, ensembleX_train, y_train, train_size, LogisticRegression())
+model = LogisticRegression(penalty = "elasticnet", solver = "saga", max_iter = 1000)
+params = {"C" : [0.1, 1, 10],
+		  "l1_ratio" : [0, 0.25, 0.5, 0.75, 1]}
+ensemble_model = fit_ensemble(members, ensembleX_train, y_train, train_size, model, params)
+# grid search results
+ensemble_results = pd.DataFrame.from_dict(ensemble_model.cv_results_)
+print(ensemble_results)
+ensemble_results.to_csv("../results/ensembles_logisticregression.csv")
+print("Best model score:", ensemble_model.best_score_)
+print(ensemble_model.best_params_)
 # predict output using ensemble model
 yhat_train = ensemble_predict(members, ensemble_model, ensembleX_train, train_size)
 train_acc = accuracy_score(y_train, yhat_train)
