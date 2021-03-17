@@ -146,4 +146,5 @@ resources/**
 # google docs and google sheet
 **.gsheet
 **.gdoc
+**.gslides
 
