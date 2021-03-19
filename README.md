@@ -50,16 +50,12 @@ Our best model goes thru two levels of classification:
 ## Deep Learning Model Architecture
 Our deep learning model architecture is shown as follows. Note that the time-series input goes through a data transformation stage via PCA.
 
-| !["deeplearning_architecture"](JaneStreetMarketPrediction/results/deeplearning_architecture.png) |
-|:--:|
-| Figure 1: Architecture for Deep Learning Model |
+![deeplearning_architecture](results/deeplearning_architecture.png)
 
 ## Stacking Ensemble 
 The stacking ensemble architecture is shown as follows. Our best result for this level was obtained using the Gaussian Naive-Bayes classifier.
 
-| !["stackingensemble"](JaneStreetMarketPrediction/results/ensemble_architecture.png) |
-|:--:|
-| Figure 2: Architecture for Stacking Ensemble |
+![stackingensemble](results/ensemble_architecture.png)
 
 ---
 
