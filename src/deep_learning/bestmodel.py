@@ -130,7 +130,7 @@ model, history = fit_model([tsfeatures_train, w_train], y_train, 500, 8192)
 
 ##
 model.summary()
-model.save("../../models/dlmodel10_2.h5")
+model.save("../../models/bestmodel.h5")
 
 #%%
 from sklearn.metrics import accuracy_score
@@ -166,5 +166,5 @@ ax2.set_ylabel("Loss", fontsize = 8)
 ax2.set_title("Loss", fontsize = 10)
 ax2.legend(fontsize = 8)
 
-fig.savefig("../../results/dlmodel10_2.png")
+fig.savefig("../../results/bestmodel.png")
 fig.show()

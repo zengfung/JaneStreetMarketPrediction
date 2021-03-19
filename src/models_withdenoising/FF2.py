@@ -124,7 +124,7 @@ model, history = fit_model(x_train, y_train, epochs = 500, batch_size = 1024)
 
 ##
 model.summary()
-model.save("../../models/dlmodel3_withdenoising.h5")
+model.save("../../models/dFF2.h5")
 
 #%%
 from sklearn.metrics import accuracy_score
@@ -160,5 +160,5 @@ ax2.set_ylabel("Loss", fontsize = 8)
 ax2.set_title("Loss", fontsize = 10)
 ax2.legend(fontsize = 8)
 
-fig.savefig("../../results/dlmodel3.png")
+fig.savefig("../../results/dFF2.png")
 fig.show()

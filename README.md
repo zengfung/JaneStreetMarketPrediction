@@ -40,6 +40,28 @@ The following are steps taken to achieve our goals:
     * Traditional ML Classifiers
 
 ---
+# Best Model Architecture
+
+Our best model goes thru two levels of classification: 
+
+1. Deep Learning
+2. Stacking Ensemble
+
+## Deep Learning Model Architecture
+Our deep learning model architecture is shown as follows. Note that the time-series input goes through a data transformation stage via PCA.
+
+| !["deeplearning_architecture"](./results/deeplearning_architecture.png) |
+|:--:|
+| Figure 1: Architecture for Deep Learning Model |
+
+## Stacking Ensemble 
+The stacking ensemble architecture is shown as follows. Our best result for this level was obtained using the Gaussian Naive-Bayes classifier.
+
+| !["stackingensemble"](./results/ensemble_architecture.png) |
+|:--:|
+| Figure 2: Architecture for Stacking Ensemble |
+
+---
 
 # Reproducing the Results
 To reproduce our results, there are two main things to be done:

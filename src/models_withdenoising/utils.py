@@ -250,7 +250,7 @@ def plot_scalogram(x, y, wt = "morl", count = 9):
             break
         i += 1
     
-    fig1.savefig("../results/energymaps1.png")
-    fig0.savefig("../results/energymaps0.png")
+    fig1.savefig("../../results/energymaps1.png")
+    fig0.savefig("../../results/energymaps0.png")
     fig1.show()
     fig0.show()

@@ -140,6 +140,8 @@ dataset/
 
 # results, resources, and models
 results/**
+!results/deeplearning_architecture.png
+!ensemble_architecture.png
 models/**
 resources/**
 

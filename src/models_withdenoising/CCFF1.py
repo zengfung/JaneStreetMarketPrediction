@@ -176,7 +176,7 @@ print("Test accuracy score:", acc)
 
 ##
 # model.summary()
-model.save("../../models/dlmodel4_withdenoising.h5")
+model.save("../../models/dCCFF1.h5")
 
 #%%
 # plot training vs validation accuracy
@@ -199,5 +199,5 @@ ax2.set_ylabel("Loss", fontsize = 8)
 ax2.set_title("Loss", fontsize = 10)
 ax2.legend(fontsize = 8)
 
-fig.savefig("../../results/dlmodel4_withdenoising.png")
+fig.savefig("../../results/dCCFF1.png")
 fig.show()

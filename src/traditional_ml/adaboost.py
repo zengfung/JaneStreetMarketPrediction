@@ -1,8 +1,7 @@
-
-# adaboost model
+# Adaboost model
 import pandas as pd
-x = pd.read_csv("../../input_data.csv").to_numpy()
-resp = pd.read_csv("../../output_data.csv").to_numpy()
+x = pd.read_csv("../../dataset/input_data.csv").to_numpy()
+resp = pd.read_csv("../../dataset/output_data.csv").to_numpy()
 
 ##
 from sklearn.decomposition import PCA
@@ -22,18 +21,30 @@ print("Test size:", y_test.shape[0], "; % trues:", np.sum(y_test)/y_test.shape[0
 
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.metrics import accuracy_score
+from sklearn.model_selection import GridSearchCV
+
+# add gridsearch
+model = AdaBoostClassifier()
+params = {"n_estimators" : [50, 100, 500]}
 
 # fit model
-clf = AdaBoostClassifier()
+clf = GridSearchCV(model, params)
 clf.fit(x_train, y_train)
+
+# grid search results
+results= pd.DataFrame.from_dict(clf.cv_results_)
+print(results)
+results.to_csv("../../results/adaboost.csv")  # save as csv file
+print("Best model score:", clf.best_score_)
+print(clf.best_params_)
 
 # predictions on training set
 yhat_train = clf.predict(x_train)
-print("Train MSE:", accuracy_score(y_train, yhat_train))
+print("Train Accuracy:", accuracy_score(y_train, yhat_train))
 
 # predictions on test set
 yhat_test = clf.predict(x_test)
-print("Test MSE:", accuracy_score(y_test, yhat_test))
+print("Test Accuracy:", accuracy_score(y_test, yhat_test))
 
 
 
