@@ -50,14 +50,14 @@ Our best model goes thru two levels of classification:
 ## Deep Learning Model Architecture
 Our deep learning model architecture is shown as follows. Note that the time-series input goes through a data transformation stage via PCA.
 
-| !["deeplearning_architecture"](./results/deeplearning_architecture.png) |
+| !["deeplearning_architecture"](results/deeplearning_architecture.png) |
 |:--:|
 | Figure 1: Architecture for Deep Learning Model |
 
 ## Stacking Ensemble 
 The stacking ensemble architecture is shown as follows. Our best result for this level was obtained using the Gaussian Naive-Bayes classifier.
 
-| !["stackingensemble"](./results/ensemble_architecture.png) |
+| !["stackingensemble"](results/ensemble_architecture.png) |
 |:--:|
 | Figure 2: Architecture for Stacking Ensemble |
 
