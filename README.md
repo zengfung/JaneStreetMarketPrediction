@@ -8,7 +8,7 @@ Authors: Zeng Fung Liew, Hyeonji Choi, Jake Cheng
 
 Note: The dataset is obtained from a [Kaggle](https://www.kaggle.com/c/jane-street-market-prediction/overview) competition.
 
-In this project, we approach this decision problem using various machine learning algorithms. Our results showed that traditional machine learning algorithms generally do not work well as compared to deep learning models, with our resulting average test accuracies being 57\% and 61\% respectively. Even then, the predictions made by deep learning models are still unsatisfactory. To further improve the prediction accuracies obtained by deep learning models, we constructed a stacking ensemble to fit secondary classifiers onto the outputs of our best deep learning models. This led to a significant improvement in prediction accuracies, with our best test accuracy being 66.7\%. 
+In this project, we approach this decision problem using various machine learning algorithms. Our results showed that traditional machine learning algorithms generally do not work well as compared to deep learning models, with our resulting average test accuracies being 54\% and 59\% respectively. Even then, the predictions made by deep learning models are still unsatisfactory. To further improve the prediction accuracies obtained by deep learning models, we constructed a stacking ensemble to fit secondary classifiers onto the outputs of our best deep learning models. This led to a significant improvement in prediction accuracies, with our best test accuracy being 66.7\%. 
 
 The following are steps taken to achieve our goals:
 
